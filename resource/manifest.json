@@ -1,0 +1,18 @@
+{
+    "format_version": 2,
+    "header": {
+      "name": "compass add-on",
+      "description": "#コンパス 戦闘摂理解析システムのマイクラ再現のためのアドオン",
+      "version": [1, 12, 0],
+      "uuid": "3395f068-cae1-4933-97ba-b1b6d390d182",
+      "min_engine_version": [1, 21, 62]
+    },
+    "modules": [
+      {
+        "type": "resources",
+        "description": " ",
+        "version": [1, 0, 0],
+        "uuid": "883e5fae-1c56-4742-9562-2ed1352ede23"
+      }
+    ]
+  }

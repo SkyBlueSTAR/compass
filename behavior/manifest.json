@@ -1,0 +1,36 @@
+{
+    "format_version": 2,
+    "header": {
+        "name": "compass add-on",
+        "description": "#コンパス 戦闘摂理解析システムのマイクラ再現のためのアドオン",
+        "version": [1, 0, 0],
+        "min_engine_version": [
+            1,
+            21,
+            62
+        ],
+        "uuid": "be4cb7a5-cc64-4fee-be5e-7c7b834636a8"
+    },
+    "modules": [
+        {
+            "type": "data",
+            "description": "",
+            "version": [1, 0, 0],
+            "uuid": "7d4f049a-a835-4f48-9985-aa05901b8dfe"
+        },
+        {
+            "type": "script",
+            "description": "",
+            "version": [1, 0, 0],
+            "uuid": "659654f1-1af1-4016-9af5-e754f7c02907",
+            "language": "Javascript",
+            "entry": "scripts/main.js"
+        }
+    ],
+    "dependencies": [
+      {
+        "module_name": "@minecraft/server",
+        "version": "1.17.0"
+      }
+    ]
+}
