@@ -33,6 +33,7 @@ system.runInterval(()=>{
 
 //ゲーム開始関数 blue:Player[],red:Player[],mapId:number
 function start(blue,red,mapId){
+    //移動不可付与とテレポート
     for(const i = 0; i < blue.length; i++){
         blue[i].inputPermissions.movementEnabled = false;
         blue[i].teleport(map.coordinates[mapId].blue[i]);
@@ -41,4 +42,6 @@ function start(blue,red,mapId){
         red[i].inputPermissions.movementEnabled = false;
         red[i].teleport(map.coordinates[mapId].blue[i]);
     }
+    //制限時間セット(180s*20tick+開始前ビューの時間)
+    world.scoreboard.getObjective("time").setScore("time",3800);
 }
