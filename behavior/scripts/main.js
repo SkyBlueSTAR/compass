@@ -60,41 +60,50 @@ const map = {
 }
 
 world.afterEvents.worldInitialize.subscribe(()=>{
-    world.sendMessage("compass add-on has been loaded!");
+    world.scoreboard.addObjective("time");
+    if(!world.scoreboard.getObjective("time").hasParticipant("time"))world.scoreboard.getObjective("time").setScore("time",0);
+    system.runTimeout(()=>{
+        world.sendMessage("compass add-on has been loaded!");
+    },200)
 })
 
 system.runInterval(()=>{
     for(const player of world.getAllPlayers()){
-        player.camera.setCamera("third_person");
+        player.camera.setCamera("minecraft:third_person");
 
         if(player.isSneaking){
+            player.sneakingTime++;
+        }else{
+            player.sneakingTime = 0;
+        }
+        if(player.sneakingTime == 1){
             const viewingPortal = player.getEntitiesFromViewDirection({tags:["portal_key"],maxDistance:1.4});
             if(viewingPortal.length>=1){
                 touch_portal(viewingPortal[0].entity,player)
             }
         }
     }
-    world.scoreboard.getObjective("time").addScore("time",-1);
+    if(world.scoreboard.getObjective("time").getScore("time")>=1)world.scoreboard.getObjective("time").addScore("time",-1);
 },1)
 
 //ゲーム開始関数 blue:Player[],red:Player[],mapId:number
 function start(blue,red,mapId){
     //移動不可付与とテレポート
-    for(const i = 0; i < blue.length; i++){
+    for(let i = 0; i < blue.length; i++){
         blue[i].inputPermissions.movementEnabled = false;
         blue[i].teleport(map.coordinates[mapId].blue[i]);
     }
-    for(const p of red){
+    for(let i = 0; i < red.length; i++){
         red[i].inputPermissions.movementEnabled = false;
         red[i].teleport(map.coordinates[mapId].red[i]);
     }
     //制限時間セット(180s*20tick+開始前ビューの時間)
     world.scoreboard.getObjective("time").setScore("time",3800);
     system.runTimeout(()=>{
-        for(const i = 0; i < blue.length; i++){
+        for(let i = 0; i < blue.length; i++){
             blue[i].inputPermissions.movementEnabled = true;
         }
-        for(const p of red){
+        for(let i = 0; i < red.length; i++){
             red[i].inputPermissions.movementEnabled = true;
         }
     },200)
@@ -129,7 +138,8 @@ function touch_portal(portalEntity,player){
         }
         menu.show(player).then(re=>{
             if(!re.canceled){
-                const nearPlayers = world.getPlayers({location:portalEntity.location,maxDistance:5})
+                world.sendMessage(portalEntity.location.x+","+portalEntity.location.y+","+portalEntity.location.z+",")
+                const nearPlayers = world.getDimension("overworld").getPlayers({location:{x:portalEntity.location.x,y:portalEntity.location.y,z:portalEntity.location.z},maxDistance:5})
                 const teamedPlayers = randomTeam(nearPlayers);
                 start(teamedPlayers.blue,teamedPlayers.red,re.selection);
             }
@@ -139,7 +149,7 @@ function touch_portal(portalEntity,player){
 
 function randomTeam(players){
     const results={blue:[],red:[]};
-    for(const i = 0; i < players.length; i++){
+    for(let i = 0; i < players.length; i++){
         if(i % 2==0){
             results.blue.push(players[i]);
         }else{
