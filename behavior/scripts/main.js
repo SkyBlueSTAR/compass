@@ -28,6 +28,13 @@ world.afterEvents.worldInitialize.subscribe(()=>{
 system.runInterval(()=>{
     for(const player of world.getAllPlayers()){
         player.camera.setCamera("third_person");
+
+        if(player.isSneaking){
+            const viewingPortal = player.getEntitiesFromViewDirection({tags:["portal_key"],maxDistance:1.4});
+            if(viewingPortal.length>=1){
+                touch_portal(viewingPortal[0].entity)
+            }
+        }
     }
 },1)
 
@@ -44,4 +51,30 @@ function start(blue,red,mapId){
     }
     //制限時間セット(180s*20tick+開始前ビューの時間)
     world.scoreboard.getObjective("time").setScore("time",3800);
+}
+
+//ポータルキー処理 portalEntity:entity
+function touch_portal(portalEntity){
+    if(portalEntity.hasTag("portal_A")){
+
+    }
+    
+    if(portalEntity.hasTag("portal_B")){
+        
+    }
+    
+    if(portalEntity.hasTag("portal_C")){
+        
+    }
+    
+    if(portalEntity.hasTag("portal_D")){
+        
+    }
+    
+    if(portalEntity.hasTag("portal_E")){
+        
+    }
+    if(portalEntity.hasTag("portal_lounge")){
+        
+    }
 }
