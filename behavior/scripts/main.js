@@ -1,4 +1,4 @@
-import {world,system} from "@minecraft/server";
+import {world,system, GameMode, BlockType, BlockTypes, BlockComponentTypes} from "@minecraft/server";
 import {ActionFormData} from "@minecraft/server-ui";
 
 const map = {
@@ -17,7 +17,8 @@ const map = {
                 {x:100,y:-48,z:300},
                 {x:100,y:-48,z:300},
                 {x:100,y:-48,z:300}
-            ]
+            ],
+            spectator:{x:100,y:-48,z:300}
         },
         {
             blue:[
@@ -33,7 +34,8 @@ const map = {
                 {x:105,y:-48,z:300},
                 {x:105,y:-48,z:300},
                 {x:105,y:-48,z:300}
-            ]
+            ],
+            spectator:{x:105,y:-48,z:300}
         },
         {
             blue:[
@@ -49,7 +51,8 @@ const map = {
                 {x:110,y:-48,z:300},
                 {x:110,y:-48,z:300},
                 {x:110,y:-48,z:300}
-            ]
+            ],
+            spectator:{x:110,y:-48,z:300}
         }
     ],
     name:[
@@ -76,26 +79,49 @@ system.runInterval(()=>{
         }else{
             player.sneakingTime = 0;
         }
-        if(player.sneakingTime == 1){
+        if(player.sneakingTime >= 1){
             const viewingPortal = player.getEntitiesFromViewDirection({tags:["portal_key"],maxDistance:1.4});
             if(viewingPortal.length>=1){
                 touch_portal(viewingPortal[0].entity,player)
+            }
+        }
+        if(player.dimension.getBlock(player.location).below().permutation.type.id == "minecraft:wool"){
+            switch(player.dimension.getBlock(player.location).below().permutation.getState("color")){
+                case "blue":
+                    player.addTag("blue");
+                    player.removeTag("red");
+                break;
+                case "red":
+                    player.removeTag("blue");
+                    player.addTag("red");
+                break;
+                case "silver":
+                    player.removeTag("blue");
+                    player.removeTag("red");
+                break;
             }
         }
     }
     if(world.scoreboard.getObjective("time").getScore("time")>=1)world.scoreboard.getObjective("time").addScore("time",-1);
 },1)
 
-//ゲーム開始関数 blue:Player[],red:Player[],mapId:number
-function start(blue,red,mapId){
+//ゲーム開始関数 blue:Player[],red:Player[],spectator:Player[],mapId:number
+function start(blue,red,spectator,mapId){
     //移動不可付与とテレポート
     for(let i = 0; i < blue.length; i++){
         blue[i].inputPermissions.movementEnabled = false;
         blue[i].teleport(map.coordinates[mapId].blue[i]);
+        spectator[i].setGameMode(GameMode.adventure);
     }
     for(let i = 0; i < red.length; i++){
         red[i].inputPermissions.movementEnabled = false;
         red[i].teleport(map.coordinates[mapId].red[i]);
+        spectator[i].setGameMode(GameMode.adventure);
+    }
+    for(let i = 0; i < spectator.length; i++){
+        spectator[i].inputPermissions.movementEnabled = false;
+        spectator[i].teleport(map.coordinates[mapId].spectator[i]);
+        spectator[i].setGameMode(GameMode.spectator);
     }
     //制限時間セット(180s*20tick+開始前ビューの時間)
     world.scoreboard.getObjective("time").setScore("time",3800);
@@ -105,6 +131,9 @@ function start(blue,red,mapId){
         }
         for(let i = 0; i < red.length; i++){
             red[i].inputPermissions.movementEnabled = true;
+        }
+        for(let i = 0; i < spectator.length; i++){
+            spectator[i].inputPermissions.movementEnabled = true;
         }
     },200)
 }
@@ -131,6 +160,7 @@ function touch_portal(portalEntity,player){
         
     }
     if(portalEntity.hasTag("portal_lounge")){
+        if(player.sneakingTime >= 2)return;
         let menu = new ActionFormData()
             .title("ステージ選択")
         for(const mapName of map.name){
@@ -139,14 +169,15 @@ function touch_portal(portalEntity,player){
         menu.show(player).then(re=>{
             if(!re.canceled){
                 world.sendMessage(portalEntity.location.x+","+portalEntity.location.y+","+portalEntity.location.z+",")
-                const nearPlayers = world.getDimension("overworld").getPlayers({location:{x:portalEntity.location.x,y:portalEntity.location.y,z:portalEntity.location.z},maxDistance:5})
-                const teamedPlayers = randomTeam(nearPlayers);
-                start(teamedPlayers.blue,teamedPlayers.red,re.selection);
+                const bluePlayers = world.getDimension("overworld").getPlayers({location:portalEntity.location,maxDistance:5,tags:["blue"]});
+                const redPlayers = world.getDimension("overworld").getPlayers({location:portalEntity.location,maxDistance:5,tags:["red"]});
+                const spectatePlayers = world.getDimension("overworld").getPlayers({location:portalEntity.location,maxDistance:5,excludeTagstags:["blue","red"]});
+                start(bluePlayers,redPlayers,spectatePlayers,re.selection);
             }
         })
     }
 }
-
+/*
 function randomTeam(players){
     const results={blue:[],red:[]};
     for(let i = 0; i < players.length; i++){
@@ -157,4 +188,4 @@ function randomTeam(players){
         }
     }
     return results;
-}
+}*/
