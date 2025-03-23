@@ -1,4 +1,4 @@
-import {world,system, GameMode, BlockType, BlockTypes, BlockComponentTypes} from "@minecraft/server";
+import {world,system, GameMode, BlockType, BlockTypes, BlockComponentTypes, EasingType} from "@minecraft/server";
 import {ActionFormData} from "@minecraft/server-ui";
 
 const map = {
@@ -59,6 +59,44 @@ const map = {
         "でらクランクストリート",
         "けっこいスターパーク",
         "かけだせ！じっぱか城"
+    ],
+    camera:[
+        [
+            {pos:{x:100,y:-40,z:300},rot:{x:-15,y:0},tick:0},
+            {pos:{x:130,y:-40,z:300},rot:{x:0,y:180},tick:60},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:0},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:10},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:40},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:10},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:0},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:10},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:40},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:10}
+        ],
+        [
+            {pos:{x:100,y:-40,z:300},rot:{x:-15,y:0},tick:0},
+            {pos:{x:130,y:-40,z:300},rot:{x:0,y:180},tick:60},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:0},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:10},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:40},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:10},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:0},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:10},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:40},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:10}
+        ],
+        [
+            {pos:{x:100,y:-40,z:300},rot:{x:-15,y:0},tick:0},
+            {pos:{x:130,y:-40,z:300},rot:{x:0,y:180},tick:60},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:0},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:10},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:40},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:10},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:0},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:10},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:40},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:10}
+        ]
     ]
 }
 
@@ -111,12 +149,12 @@ function start(blue,red,spectator,mapId){
     for(let i = 0; i < blue.length; i++){
         blue[i].inputPermissions.movementEnabled = false;
         blue[i].teleport(map.coordinates[mapId].blue[i]);
-        spectator[i].setGameMode(GameMode.adventure);
+        blue[i].setGameMode(GameMode.adventure);
     }
     for(let i = 0; i < red.length; i++){
         red[i].inputPermissions.movementEnabled = false;
         red[i].teleport(map.coordinates[mapId].red[i]);
-        spectator[i].setGameMode(GameMode.adventure);
+        red[i].setGameMode(GameMode.adventure);
     }
     for(let i = 0; i < spectator.length; i++){
         spectator[i].inputPermissions.movementEnabled = false;
@@ -136,6 +174,23 @@ function start(blue,red,spectator,mapId){
             spectator[i].inputPermissions.movementEnabled = true;
         }
     },200)
+}
+
+//試合前カメラ処理 cameraList:{pos:Vector3,rot:Vector2,tick:Number}[],players:Player[]
+function camera(cameraList,players){
+    for(const player of players){
+        if(cameraList[0].tick>=1){
+            player.camera.setCamera("minecraft:free",{location:cameraList[0].pos,rotation:cameraList[0].rot,easeOptions:{easeTime:cameraList[0].tick,easeType:EasingType.InOutCubic}})
+        }else{
+            player.camera.setCamera("minecraft:free",{location:cameraList[0].pos,rotation:cameraList[0].rot})
+        }
+    }
+    if(cameraList.length>=2){
+        system.runTimeout(()=>{
+            cameraList.shift();
+            camera(cameraList);
+        },cameraList[0].tick)
+    }
 }
 
 //ポータルキー処理 portalEntity:entity,player:Player
