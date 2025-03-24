@@ -62,8 +62,8 @@ const map = {
     ],
     camera:[
         [
-            {pos:{x:100,y:-40,z:300},rot:{x:-15,y:0},tick:0},
-            {pos:{x:130,y:-40,z:300},rot:{x:0,y:180},tick:60},
+            {pos:{x:130,y:-40,z:300},rot:{x:15,y:0},tick:0},
+            {pos:{x:120,y:-40,z:300},rot:{x:15,y:180},tick:60},
             {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:0},
             {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:10},
             {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:40},
@@ -74,8 +74,8 @@ const map = {
             {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:10}
         ],
         [
-            {pos:{x:100,y:-40,z:300},rot:{x:-15,y:0},tick:0},
-            {pos:{x:130,y:-40,z:300},rot:{x:0,y:180},tick:60},
+            {pos:{x:100,y:-40,z:300},rot:{x:15,y:0},tick:0},
+            {pos:{x:130,y:-40,z:300},rot:{x:15,y:180},tick:60},
             {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:0},
             {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:10},
             {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:40},
@@ -86,8 +86,8 @@ const map = {
             {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:10}
         ],
         [
-            {pos:{x:100,y:-40,z:300},rot:{x:-15,y:0},tick:0},
-            {pos:{x:130,y:-40,z:300},rot:{x:0,y:180},tick:60},
+            {pos:{x:100,y:-40,z:300},rot:{x:15,y:0},tick:0},
+            {pos:{x:130,y:-40,z:300},rot:{x:15,y:180},tick:60},
             {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:0},
             {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:10},
             {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:40},
@@ -110,8 +110,9 @@ world.afterEvents.worldInitialize.subscribe(()=>{
 
 system.runInterval(()=>{
     for(const player of world.getAllPlayers()){
-        player.camera.setCamera("minecraft:third_person");
-
+        if(world.scoreboard.getObjective("time").getScore("time")<=3600){
+            player.camera.setCamera("minecraft:third_person");
+        }
         if(player.isSneaking){
             player.sneakingTime++;
         }else{
@@ -123,21 +124,19 @@ system.runInterval(()=>{
                 touch_portal(viewingPortal[0].entity,player)
             }
         }
-        if(player.dimension.getBlock(player.location).below().permutation.type.id == "minecraft:wool"){
-            switch(player.dimension.getBlock(player.location).below().permutation.getState("color")){
-                case "blue":
-                    player.addTag("blue");
-                    player.removeTag("red");
-                break;
-                case "red":
-                    player.removeTag("blue");
-                    player.addTag("red");
-                break;
-                case "silver":
-                    player.removeTag("blue");
-                    player.removeTag("red");
-                break;
-            }
+        switch(player.dimension.getBlock(player.location).below().permutation.type.id){
+            case "minecraft:blue_wool":
+                player.addTag("blue");
+                player.removeTag("red");
+            break;
+            case "minecraft:red_wool":
+                player.removeTag("blue");
+                player.addTag("red");
+            break;
+            case "minecraft:light_gray_wool":
+                player.removeTag("blue");
+                player.removeTag("red");
+            break;
         }
     }
     if(world.scoreboard.getObjective("time").getScore("time")>=1)world.scoreboard.getObjective("time").addScore("time",-1);
@@ -145,7 +144,7 @@ system.runInterval(()=>{
 
 //ゲーム開始関数 blue:Player[],red:Player[],spectator:Player[],mapId:number
 function start(blue,red,spectator,mapId){
-    //移動不可付与とテレポート
+    //移動不可付与とテレポート、カメラワーク起動
     for(let i = 0; i < blue.length; i++){
         blue[i].inputPermissions.movementEnabled = false;
         blue[i].teleport(map.coordinates[mapId].blue[i]);
@@ -158,9 +157,12 @@ function start(blue,red,spectator,mapId){
     }
     for(let i = 0; i < spectator.length; i++){
         spectator[i].inputPermissions.movementEnabled = false;
-        spectator[i].teleport(map.coordinates[mapId].spectator[i]);
+        spectator[i].teleport(map.coordinates[mapId].spectator);
         spectator[i].setGameMode(GameMode.spectator);
     }
+    camera(map.camera[mapId],blue);
+    camera(map.camera[mapId],red);
+    camera(map.camera[mapId],spectator);
     //制限時間セット(180s*20tick+開始前ビューの時間)
     world.scoreboard.getObjective("time").setScore("time",3800);
     system.runTimeout(()=>{
@@ -179,17 +181,32 @@ function start(blue,red,spectator,mapId){
 //試合前カメラ処理 cameraList:{pos:Vector3,rot:Vector2,tick:Number}[],players:Player[]
 function camera(cameraList,players){
     for(const player of players){
-        if(cameraList[0].tick>=1){
-            player.camera.setCamera("minecraft:free",{location:cameraList[0].pos,rotation:cameraList[0].rot,easeOptions:{easeTime:cameraList[0].tick,easeType:EasingType.InOutCubic}})
+        if(cameraList[0].tick >= 1){
+            player.camera.setCamera("minecraft:free",{location:cameraList[0].pos,rotation:cameraList[0].rot,easeOptions:{easeTime:cameraList[0].tick/20,easeType:EasingType.InOutCubic}})
         }else{
             player.camera.setCamera("minecraft:free",{location:cameraList[0].pos,rotation:cameraList[0].rot})
         }
     }
     if(cameraList.length>=2){
-        system.runTimeout(()=>{
-            cameraList.shift();
-            camera(cameraList);
-        },cameraList[0].tick)
+        if(cameraList[0].tick>=1){
+            system.runTimeout(()=>{
+                let newCameraList = []
+                for(let i = 1; i < cameraList.length; i++){
+                    newCameraList.push(cameraList[i]);
+                }
+                camera(newCameraList,players);
+            },cameraList[0].tick)
+        }else{
+            let newCameraList = []
+            for(let i = 1; i < cameraList.length; i++){
+                newCameraList.push(cameraList[i]);
+            }
+            camera(newCameraList,players);
+        }
+    }else{
+        for(const player of players){
+            player.camera.setCamera("minecraft:third_person");
+        }
     }
 }
 
@@ -223,10 +240,9 @@ function touch_portal(portalEntity,player){
         }
         menu.show(player).then(re=>{
             if(!re.canceled){
-                world.sendMessage(portalEntity.location.x+","+portalEntity.location.y+","+portalEntity.location.z+",")
                 const bluePlayers = world.getDimension("overworld").getPlayers({location:portalEntity.location,maxDistance:5,tags:["blue"]});
                 const redPlayers = world.getDimension("overworld").getPlayers({location:portalEntity.location,maxDistance:5,tags:["red"]});
-                const spectatePlayers = world.getDimension("overworld").getPlayers({location:portalEntity.location,maxDistance:5,excludeTagstags:["blue","red"]});
+                const spectatePlayers = world.getDimension("overworld").getPlayers({location:portalEntity.location,maxDistance:5,excludeTags:["blue","red"]});
                 start(bluePlayers,redPlayers,spectatePlayers,re.selection);
             }
         })
