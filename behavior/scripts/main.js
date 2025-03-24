@@ -62,50 +62,47 @@ const map = {
     ],
     camera:[
         [
-            {pos:{x:130,y:-40,z:300},rot:{x:15,y:0},tick:0},
-            {pos:{x:120,y:-40,z:300},rot:{x:15,y:180},tick:60},
-            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:0},
-            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:10},
-            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:40},
-            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:10},
-            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:0},
-            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:10},
-            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:40},
-            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:10}
+            {pos:{x:130,y:-40,z:300},rot:{x:15,y:0},tick:0,blackout:false},
+            {pos:{x:120,y:-40,z:300},rot:{x:15,y:180},tick:60,blackout:false},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:0,blackout:true},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:10,blackout:false},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:40,blackout:false},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:10,blackout:false},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:0,blackout:true},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:10,blackout:false},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:40,blackout:false},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:10,blackout:true}
         ],
         [
-            {pos:{x:100,y:-40,z:300},rot:{x:15,y:0},tick:0},
-            {pos:{x:130,y:-40,z:300},rot:{x:15,y:180},tick:60},
-            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:0},
-            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:10},
-            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:40},
-            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:10},
-            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:0},
-            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:10},
-            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:40},
-            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:10}
+            {pos:{x:100,y:-40,z:300},rot:{x:15,y:0},tick:0,blackout:false},
+            {pos:{x:130,y:-40,z:300},rot:{x:15,y:180},tick:60,blackout:false},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:0,blackout:true},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:10,blackout:false},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:40,blackout:false},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:10,blackout:false},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:0,blackout:true},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:10,blackout:false},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:40,blackout:false},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:10,blackout:true}
         ],
         [
-            {pos:{x:100,y:-40,z:300},rot:{x:15,y:0},tick:0},
-            {pos:{x:130,y:-40,z:300},rot:{x:15,y:180},tick:60},
-            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:0},
-            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:10},
-            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:40},
-            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:10},
-            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:0},
-            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:10},
-            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:40},
-            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:10}
+            {pos:{x:100,y:-40,z:300},rot:{x:15,y:0},tick:0,blackout:false},
+            {pos:{x:130,y:-40,z:300},rot:{x:15,y:180},tick:60,blackout:false},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:0,blackout:true},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:0},tick:10,blackout:false},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:40,blackout:false},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:0},tick:10,blackout:false},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:0,blackout:true},
+            {pos:{x:100,y:-40,z:300},rot:{x:0,y:180},tick:10,blackout:false},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:40,blackout:false},
+            {pos:{x:90,y:-40,z:300},rot:{x:0,y:180},tick:10,blackout:true}
         ]
     ]
 }
 
 world.afterEvents.worldInitialize.subscribe(()=>{
-    world.scoreboard.addObjective("time");
+    if(!world.scoreboard.getObjective("time")?.isValid())world.scoreboard.addObjective("time");
     if(!world.scoreboard.getObjective("time").hasParticipant("time"))world.scoreboard.getObjective("time").setScore("time",0);
-    system.runTimeout(()=>{
-        world.sendMessage("compass add-on has been loaded!");
-    },200)
 })
 
 system.runInterval(()=>{
@@ -121,7 +118,7 @@ system.runInterval(()=>{
         if(player.sneakingTime >= 1){
             const viewingPortal = player.getEntitiesFromViewDirection({tags:["portal_key"],maxDistance:1.4});
             if(viewingPortal.length>=1){
-                touch_portal(viewingPortal[0].entity,player)
+                touch_portal(viewingPortal[0].entity,player);
             }
         }
         switch(player.dimension.getBlock(player.location).below().permutation.type.id){
@@ -178,13 +175,13 @@ function start(blue,red,spectator,mapId){
     },200)
 }
 
-//試合前カメラ処理 cameraList:{pos:Vector3,rot:Vector2,tick:Number}[],players:Player[]
+//試合前カメラ処理 cameraList:{pos:Vector3,rot:Vector2,tick:Number,blackout:boolean}[],players:Player[]
 function camera(cameraList,players){
     for(const player of players){
         if(cameraList[0].tick >= 1){
-            player.camera.setCamera("minecraft:free",{location:cameraList[0].pos,rotation:cameraList[0].rot,easeOptions:{easeTime:cameraList[0].tick/20,easeType:EasingType.InOutCubic}})
+            player.camera.setCamera("minecraft:free",{location:cameraList[0].pos,rotation:cameraList[0].rot,easeOptions:{easeTime:cameraList[0].tick/20,easeType:EasingType.InOutCubic}});
         }else{
-            player.camera.setCamera("minecraft:free",{location:cameraList[0].pos,rotation:cameraList[0].rot})
+            player.camera.setCamera("minecraft:free",{location:cameraList[0].pos,rotation:cameraList[0].rot});
         }
     }
     if(cameraList.length>=2){
@@ -196,6 +193,17 @@ function camera(cameraList,players){
                 }
                 camera(newCameraList,players);
             },cameraList[0].tick)
+            if(cameraList[0].tick>=11 && cameraList[1].blackout){
+                system.runTimeout(()=>{
+                    for(const player of players){
+                        player.camera.fade({fadeColor:{blue:0,green:0,red:0},fadeTime:{fadeInTime:0.5,holdTime:0.5,fadeOutTime:0.5}});
+                    }
+                },cameraList[0].tick-10)
+            }else if(cameraList[0].tick==10 && cameraList[1].blackout){
+                for(const player of players){
+                    player.camera.fade({fadeColor:{blue:0,green:0,red:0},fadeTime:{fadeInTime:0.5,holdTime:0.5,fadeOutTime:0.5}});
+                }
+            }
         }else{
             let newCameraList = []
             for(let i = 1; i < cameraList.length; i++){
@@ -205,6 +213,11 @@ function camera(cameraList,players){
         }
     }else{
         for(const player of players){
+            if(cameraList[0].blackout){
+                for(const player of players){
+                    player.camera.fade({fadeColor:{blue:0,green:0,red:0},fadeTime:{fadeInTime:0.5,holdTime:0.5,fadeOutTime:0.5}});
+                }
+            }
             player.camera.setCamera("minecraft:third_person");
         }
     }
