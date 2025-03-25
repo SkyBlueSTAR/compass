@@ -1,4 +1,4 @@
-import {world,system, GameMode, BlockType, BlockTypes, BlockComponentTypes, EasingType} from "@minecraft/server";
+import {world,system, GameMode, BlockType, BlockTypes, BlockComponentTypes, EasingType, BlockPermutation, BlockVolume, InputPermissionCategory} from "@minecraft/server";
 import {ActionFormData} from "@minecraft/server-ui";
 
 const map = {
@@ -102,23 +102,42 @@ const map = {
 
 world.afterEvents.worldInitialize.subscribe(()=>{
     if(!world.scoreboard.getObjective("time")?.isValid())world.scoreboard.addObjective("time");
+    if(!world.scoreboard.getObjective("portal_state")?.isValid())world.scoreboard.addObjective("portal_state")
     if(!world.scoreboard.getObjective("time").hasParticipant("time"))world.scoreboard.getObjective("time").setScore("time",0);
 })
 
+let loop = 0;
 system.runInterval(()=>{
     for(const player of world.getAllPlayers()){
-        if(world.scoreboard.getObjective("time").getScore("time")<=3600){
+        if(world.scoreboard.getObjective("time").getScore("time")<=3600 && world.scoreboard.getObjective("time").getScore("time")>=1){
             player.camera.setCamera("minecraft:third_person");
         }
-        if(player.isSneaking){
+        if(player.isSneaking || player.lockMovement>=1){
             player.sneakingTime++;
+            if(player.inputPermissions.isPermissionCategoryEnabled(InputPermissionCategory.LateralMovement))player.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement,false);
         }else{
-            player.sneakingTime = 0;
+            //剥がし時の行動ロック(0.25s)
+            if(!player.lockMovement>=1 && player.sneakingTime>=1 && !player.isInAction){
+                player.lockMovement = 5;
+                player.sneakingTime = -5;
+            }else{
+                player.sneakingTime = 0;
+            }
+            if(!player.inputPermissions.isPermissionCategoryEnabled(InputPermissionCategory.LateralMovement))player.inputPermissions.setPermissionCategory(InputPermissionCategory.LateralMovement,true);
+            if(!player.inputPermissions.isPermissionCategoryEnabled(InputPermissionCategory.Camera))player.inputPermissions.setPermissionCategory(InputPermissionCategory.Camera,true);
+            player.isInAction = false;
         }
+        //スニークでポータルタッチ/HAの分岐処理
         if(player.sneakingTime >= 1){
-            const viewingPortal = player.getEntitiesFromViewDirection({tags:["portal_key"],maxDistance:1.4});
-            if(viewingPortal.length>=1){
-                touch_portal(viewingPortal[0].entity,player);
+            const viewingPortal = player.getEntitiesFromViewDirection({tags:["portal_key"],maxDistance:2});
+            let portal_touch = false;
+            if(viewingPortal.length>=1 && !player.isInAction && !player.notTouch){
+                //ポータルタッチ処理
+               portal_touch = touch_portal(viewingPortal[0].entity,player);
+            }
+            if(!portal_touch){
+                //HA処理
+                player.isInAction = true;
             }
         }
         switch(player.dimension.getBlock(player.location).below().permutation.type.id){
@@ -135,8 +154,60 @@ system.runInterval(()=>{
                 player.removeTag("red");
             break;
         }
+        if(player.lockMovement>=1)player.lockMovement--;
+    }
+    //各ポータルについての処理
+    const portals = world.getDimension("overworld").getEntities({type:"armor_stand",tags:["portal_key","portal_A"]}).concat(
+        world.getDimension("overworld").getEntities({type:"armor_stand",tags:["portal_key","portal_B"]}),
+        world.getDimension("overworld").getEntities({type:"armor_stand",tags:["portal_key","portal_C"]}),
+        world.getDimension("overworld").getEntities({type:"armor_stand",tags:["portal_key","portal_D"]}),
+        world.getDimension("overworld").getEntities({type:"armor_stand",tags:["portal_key","portal_E"]})
+    );
+    for(const portal of portals){
+        const portalRange = Math.abs(world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity)*0.03);
+        if(portal.dimension.getPlayers({location:{x:portal.location.x-portalRange-1.5,y:portal.location.y,z:portal.location.z-portalRange-1.5},volume:{x:portalRange*2+2,y:10,z:portalRange*2+2},tags:["blue"]}).length>=1){
+            portal.addTag("steppedByBlue");
+        }else{
+            portal.removeTag("steppedByBlue");
+        }
+        if(portal.dimension.getPlayers({location:{x:portal.location.x-portalRange-1.5,y:portal.location.y,z:portal.location.z-portalRange-1.5},volume:{x:portalRange*2+2,y:10,z:portalRange*2+2},tags:["red"]}).length>=1){
+            portal.addTag("steppedByRed");
+        }else{
+            portal.removeTag("steppedByRed");
+        }
+        if(portal.hasTag("steppedByBlue") && !portal.hasTag("steppedByRed") && world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity) >= 1 && !portal.lock){
+            world.scoreboard.getObjective("portal_state").addScore(portal.scoreboardIdentity,1);
+        }
+        if(!portal.hasTag("steppedByBlue") && portal.hasTag("steppedByRed") && world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity) <= -1 && !portal.lock){
+            world.scoreboard.getObjective("portal_state").addScore(portal.scoreboardIdentity,-1);
+        }
+        for(let x = Math.floor(-portalRange-1.5); x <= Math.ceil(portalRange+1.5); x++){
+            for(let z = Math.floor(-portalRange-1.5); z <= Math.ceil(portalRange+1.5); z++){
+                let nx = x;
+                let nz = z;
+                if(x == Math.floor(-portalRange-1.5)){
+                    nx = -portalRange-1.5;
+                }
+                if(x == Math.ceil(portalRange+1.5)){
+                    nx = portalRange+1.5;
+                }
+                if(z == Math.floor(-portalRange-1.5)){
+                    nz = -portalRange-1.5;
+                }
+                if(z == Math.ceil(portalRange+1.5)){
+                    nz = portalRange+1.5;
+                }
+                if(world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity) >= 1 && loop%5 == 0){
+                    portal.dimension.spawnParticle("minecraft:blue_flame_particle",{x:portal.location.x+nx,y:portal.location.y,z:portal.location.z+nz});
+                }
+                if(world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity) <= -1 && loop%5 == 0){
+                    portal.dimension.spawnParticle("minecraft:basic_flame_particle",{x:portal.location.x+nx,y:portal.location.y,z:portal.location.z+nz});
+                }
+            }
+        }
     }
     if(world.scoreboard.getObjective("time").getScore("time")>=1)world.scoreboard.getObjective("time").addScore("time",-1);
+    loop++;
 },1)
 
 //ゲーム開始関数 blue:Player[],red:Player[],spectator:Player[],mapId:number
@@ -225,24 +296,81 @@ function camera(cameraList,players){
 
 //ポータルキー処理 portalEntity:entity,player:Player
 function touch_portal(portalEntity,player){
-    if(portalEntity.hasTag("portal_A")){
-
-    }
-    
-    if(portalEntity.hasTag("portal_B")){
-        
-    }
-    
-    if(portalEntity.hasTag("portal_C")){
-        
-    }
-    
-    if(portalEntity.hasTag("portal_D")){
-        
-    }
-    
-    if(portalEntity.hasTag("portal_E")){
-        
+    if(portalEntity.hasTag("portal_A") || portalEntity.hasTag("portal_B") || portalEntity.hasTag("portal_C") || portalEntity.hasTag("portal_D") || portalEntity.hasTag("portal_E")){
+        if(world.scoreboard.getObjective("portal_state").getScore(portalEntity.scoreboardIdentity)==0){
+            if(player.hasTag("blue")){
+                player.inputPermissions.setPermissionCategory(InputPermissionCategory.Camera,false);
+                //取得時の行動ロック(2s)
+                if(!player.lockMovement>=1 && player.sneakingTime == 1){
+                    player.lockMovement = 40;
+                }
+                //ポータル拡張ロック
+                portalEntity.lock = true;
+                system.runTimeout(()=>{
+                    world.scoreboard.getObjective("portal_state").setScore(portalEntity.scoreboardIdentity,1);
+                    place_blue_portal(portalEntity);
+                    portalEntity.lock = false;
+                },30)
+            }
+            if(player.hasTag("red")){
+                player.inputPermissions.setPermissionCategory(InputPermissionCategory.Camera,false);
+                //取得時の行動ロック(2s)
+                if(!player.lockMovement>=1 && player.sneakingTime == 1){
+                    player.lockMovement = 40;
+                }
+                //ポータル拡張ロック
+                portalEntity.lock = true;
+                system.runTimeout(()=>{
+                    world.scoreboard.getObjective("portal_state").setScore(portalEntity.scoreboardIdentity,-1);
+                    place_red_portal(portalEntity);
+                    portalEntity.lock = false;
+                },30)
+            }
+        }
+        if(player.hasTag("blue") && world.scoreboard.getObjective("portal_state").getScore(portalEntity.scoreboardIdentity)>=1)return false;
+        if(player.hasTag("red") && world.scoreboard.getObjective("portal_state").getScore(portalEntity.scoreboardIdentity)<=-1)return false;
+        if(portalEntity.hasTag("steppedByBlue") && world.scoreboard.getObjective("portal_state").getScore(portalEntity.scoreboardIdentity)>=1)return false;
+        if(portalEntity.hasTag("steppedByRed") && world.scoreboard.getObjective("portal_state").getScore(portalEntity.scoreboardIdentity)<=-1)return false;
+        if(player.inputPermissions.isPermissionCategoryEnabled(InputPermissionCategory.Camera))player.inputPermissions.setPermissionCategory(InputPermissionCategory.Camera,false);
+        //タッチ時の行動ロック(1s)
+        if(!player.lockMovement>=1 && player.sneakingTime == 1){
+            player.lockMovement = 20;
+        }
+        if(player.sneakingTime>=21){
+            if(player.hasTag("blue")){
+                world.scoreboard.getObjective("portal_state").addScore(portalEntity.scoreboardIdentity,2);
+                if(world.scoreboard.getObjective("portal_state").getScore(portalEntity.scoreboardIdentity)>=0){
+                    //取得時の行動ロック(2s)
+                    if(!player.lockMovement>=1){
+                        player.lockMovement = 40;
+                    }
+                    //ポータル拡張ロック
+                    portalEntity.lock = true;
+                    system.runTimeout(()=>{
+                        world.scoreboard.getObjective("portal_state").setScore(portalEntity.scoreboardIdentity,1);
+                        place_blue_portal(portalEntity);
+                        portalEntity.lock = false;
+                    },30)
+                }
+            }
+            if(player.hasTag("red")){
+                world.scoreboard.getObjective("portal_state").addScore(portalEntity.scoreboardIdentity,-2);
+                if(world.scoreboard.getObjective("portal_state").getScore(portalEntity.scoreboardIdentity)<=0){
+                    //取得時の行動ロック(2s)
+                    if(!player.lockMovement>=1){
+                        player.lockMovement = 40;
+                    }
+                    //ポータル拡張ロック
+                    portalEntity.lock = true;
+                    system.runTimeout(()=>{
+                        world.scoreboard.getObjective("portal_state").setScore(portalEntity.scoreboardIdentity,-1);
+                        place_red_portal(portalEntity);
+                        portalEntity.lock = false;
+                    },30)
+                }
+            }
+        }
+        return true;
     }
     if(portalEntity.hasTag("portal_lounge")){
         if(player.sneakingTime >= 2)return;
@@ -259,5 +387,53 @@ function touch_portal(portalEntity,player){
                 start(bluePlayers,redPlayers,spectatePlayers,re.selection);
             }
         })
+        return true;
     }
 }
+
+//ポータルリセット portal:Entity
+function portal_reset(portal){
+    if(!portal.hasTag("portal_key"))return false;
+    portal.dimension.fillBlocks(new BlockVolume(portal.location,{x:portal.location.x,y:portal.location.y+3,z:portal.location.z}),BlockPermutation.resolve("andesite_wall"));
+    portal.dimension.setBlockPermutation({x:portal.location.x,y:portal.location.y+1,z:portal.location.z},BlockPermutation.resolve("pale_oak_fence"));
+    portal.dimension.setBlockPermutation({x:portal.location.x,y:portal.location.y+4,z:portal.location.z},BlockPermutation.resolve("pale_oak_trapdoor",{direction:0,open_bit:false,upside_down_bit:false}));
+    portal.dimension.setBlockPermutation({x:portal.location.x+1,y:portal.location.y+3,z:portal.location.z},BlockPermutation.resolve("pale_oak_trapdoor",{direction:0,open_bit:true,upside_down_bit:true}));
+    portal.dimension.setBlockPermutation({x:portal.location.x-1,y:portal.location.y+3,z:portal.location.z},BlockPermutation.resolve("pale_oak_trapdoor",{direction:1,open_bit:true,upside_down_bit:true}));
+    portal.dimension.setBlockPermutation({x:portal.location.x,y:portal.location.y+3,z:portal.location.z+1},BlockPermutation.resolve("pale_oak_trapdoor",{direction:2,open_bit:true,upside_down_bit:true}));
+    portal.dimension.setBlockPermutation({x:portal.location.x,y:portal.location.y+3,z:portal.location.z-1},BlockPermutation.resolve("pale_oak_trapdoor",{direction:3,open_bit:true,upside_down_bit:true}));
+    portal.dimension.setBlockPermutation({x:portal.location.x+portal.getViewDirection().x,y:portal.location.y+portal.getViewDirection().y,z:portal.location.z+portal.getViewDirection().z},BlockPermutation.resolve("iron_bars"));
+}
+
+//青ポータル設置 portal:Entity
+function place_blue_portal(portal){
+    if(!portal.hasTag("portal_key"))return false;
+    portal.dimension.fillBlocks(new BlockVolume(portal.location,{x:portal.location.x,y:portal.location.y+3,z:portal.location.z}),BlockPermutation.resolve("prismarine_wall"));
+    portal.dimension.setBlockPermutation({x:portal.location.x,y:portal.location.y+1,z:portal.location.z},BlockPermutation.resolve("warped_fence"));
+    portal.dimension.setBlockPermutation({x:portal.location.x,y:portal.location.y+4,z:portal.location.z},BlockPermutation.resolve("warped_trapdoor",{direction:0,open_bit:false,upside_down_bit:false}));
+    portal.dimension.setBlockPermutation({x:portal.location.x+1,y:portal.location.y+3,z:portal.location.z},BlockPermutation.resolve("warped_trapdoor",{direction:0,open_bit:true,upside_down_bit:true}));
+    portal.dimension.setBlockPermutation({x:portal.location.x-1,y:portal.location.y+3,z:portal.location.z},BlockPermutation.resolve("warped_trapdoor",{direction:1,open_bit:true,upside_down_bit:true}));
+    portal.dimension.setBlockPermutation({x:portal.location.x,y:portal.location.y+3,z:portal.location.z+1},BlockPermutation.resolve("warped_trapdoor",{direction:2,open_bit:true,upside_down_bit:true}));
+    portal.dimension.setBlockPermutation({x:portal.location.x,y:portal.location.y+3,z:portal.location.z-1},BlockPermutation.resolve("warped_trapdoor",{direction:3,open_bit:true,upside_down_bit:true}));
+    portal.dimension.setBlockPermutation({x:portal.location.x+portal.getViewDirection().x,y:portal.location.y+portal.getViewDirection().y,z:portal.location.z+portal.getViewDirection().z},BlockPermutation.resolve("iron_bars"));
+}
+
+//赤ポータル設置 portal:Entity
+function place_red_portal(portal){
+    if(!portal.hasTag("portal_key"))return false;
+    portal.dimension.fillBlocks(new BlockVolume(portal.location,{x:portal.location.x,y:portal.location.y+3,z:portal.location.z}),BlockPermutation.resolve("granite_wall"));
+    portal.dimension.setBlockPermutation({x:portal.location.x,y:portal.location.y+1,z:portal.location.z},BlockPermutation.resolve("crimson_fence"));
+    portal.dimension.setBlockPermutation({x:portal.location.x,y:portal.location.y+4,z:portal.location.z},BlockPermutation.resolve("crimson_trapdoor",{direction:0,open_bit:false,upside_down_bit:false}));
+    portal.dimension.setBlockPermutation({x:portal.location.x+1,y:portal.location.y+3,z:portal.location.z},BlockPermutation.resolve("crimson_trapdoor",{direction:0,open_bit:true,upside_down_bit:true}));
+    portal.dimension.setBlockPermutation({x:portal.location.x-1,y:portal.location.y+3,z:portal.location.z},BlockPermutation.resolve("crimson_trapdoor",{direction:1,open_bit:true,upside_down_bit:true}));
+    portal.dimension.setBlockPermutation({x:portal.location.x,y:portal.location.y+3,z:portal.location.z+1},BlockPermutation.resolve("crimson_trapdoor",{direction:2,open_bit:true,upside_down_bit:true}));
+    portal.dimension.setBlockPermutation({x:portal.location.x,y:portal.location.y+3,z:portal.location.z-1},BlockPermutation.resolve("crimson_trapdoor",{direction:3,open_bit:true,upside_down_bit:true}));
+    portal.dimension.setBlockPermutation({x:portal.location.x+portal.getViewDirection().x,y:portal.location.y+portal.getViewDirection().y,z:portal.location.z+portal.getViewDirection().z},BlockPermutation.resolve("iron_bars"));
+}
+
+system.afterEvents.scriptEventReceive.subscribe(ev=>{
+    if(ev.id == "cp:portal"){
+        ev.sourceEntity.addTag("portal_key");
+        portal_reset(ev.sourceEntity);
+        ev.sourceEntity.removeTag("portal_key")
+    }
+})
