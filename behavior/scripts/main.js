@@ -261,15 +261,3 @@ function touch_portal(portalEntity,player){
         })
     }
 }
-/*
-function randomTeam(players){
-    const results={blue:[],red:[]};
-    for(let i = 0; i < players.length; i++){
-        if(i % 2==0){
-            results.blue.push(players[i]);
-        }else{
-            results.red.push(players[i]);
-        }
-    }
-    return results;
-}*/
