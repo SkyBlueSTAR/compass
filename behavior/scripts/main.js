@@ -164,38 +164,56 @@ system.runInterval(()=>{
         world.getDimension("overworld").getEntities({type:"armor_stand",tags:["portal_key","portal_E"]})
     );
     for(const portal of portals){
-        const portalRange = Math.abs(world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity)*0.03);
-        if(portal.dimension.getPlayers({location:{x:portal.location.x-portalRange-1.5,y:portal.location.y,z:portal.location.z-portalRange-1.5},volume:{x:portalRange*2+2,y:10,z:portalRange*2+2},tags:["blue"]}).length>=1){
+        const portalRange = Math.abs(world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity)/288);
+        if(portal.dimension.getPlayers({location:{x:portal.location.x-portalRange-0.5,y:portal.location.y,z:portal.location.z-portalRange-0.5},volume:{x:portalRange*2,y:10,z:portalRange*2},tags:["blue"]}).length>=1){
             portal.addTag("steppedByBlue");
         }else{
             portal.removeTag("steppedByBlue");
         }
-        if(portal.dimension.getPlayers({location:{x:portal.location.x-portalRange-1.5,y:portal.location.y,z:portal.location.z-portalRange-1.5},volume:{x:portalRange*2+2,y:10,z:portalRange*2+2},tags:["red"]}).length>=1){
+        if(portal.dimension.getPlayers({location:{x:portal.location.x-portalRange-0.5,y:portal.location.y,z:portal.location.z-portalRange-0.5},volume:{x:portalRange*2+2,y:10,z:portalRange*2+2},tags:["red"]}).length>=1){
             portal.addTag("steppedByRed");
         }else{
             portal.removeTag("steppedByRed");
         }
         if(portal.hasTag("steppedByBlue") && !portal.hasTag("steppedByRed") && world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity) >= 1 && !portal.lock){
-            world.scoreboard.getObjective("portal_state").addScore(portal.scoreboardIdentity,1);
+            world.scoreboard.getObjective("portal_state").addScore(portal.scoreboardIdentity,4);
+            if((portal.hasTag("portal_A") || portal.hasTag("portal_E")) && world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity) > 2016){
+                world.scoreboard.getObjective("portal_state").setScore(portal.scoreboardIdentity,2016);
+            }
+            if((portal.hasTag("portal_B") || portal.hasTag("portal_D")) && world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity) > 1440){
+                world.scoreboard.getObjective("portal_state").setScore(portal.scoreboardIdentity,1440);
+            }
+            if(portal.hasTag("portal_C") && world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity) > 576){
+                world.scoreboard.getObjective("portal_state").setScore(portal.scoreboardIdentity,576);
+            }
         }
         if(!portal.hasTag("steppedByBlue") && portal.hasTag("steppedByRed") && world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity) <= -1 && !portal.lock){
-            world.scoreboard.getObjective("portal_state").addScore(portal.scoreboardIdentity,-1);
+            world.scoreboard.getObjective("portal_state").addScore(portal.scoreboardIdentity,-4);
+            if((portal.hasTag("portal_A") || portal.hasTag("portal_E")) && world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity) < -2016){
+                world.scoreboard.getObjective("portal_state").setScore(portal.scoreboardIdentity,-2016);
+            }
+            if((portal.hasTag("portal_B") || portal.hasTag("portal_D")) && world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity) < -1440){
+                world.scoreboard.getObjective("portal_state").setScore(portal.scoreboardIdentity,-1440);
+            }
+            if(portal.hasTag("portal_C") && world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity) < -576){
+                world.scoreboard.getObjective("portal_state").setScore(portal.scoreboardIdentity,-576);
+            }
         }
-        for(let x = Math.floor(-portalRange-1.5); x <= Math.ceil(portalRange+1.5); x++){
-            for(let z = Math.floor(-portalRange-1.5); z <= Math.ceil(portalRange+1.5); z++){
+        for(let x = Math.floor((-portalRange-0.5)/2)*2; x <= Math.ceil((portalRange+0.5)/2)*2; x+=2){
+            for(let z = Math.floor((-portalRange-0.5)/2)*2; z <= Math.ceil((portalRange+0.5)/2)*2; z+=2){
                 let nx = x;
                 let nz = z;
-                if(x == Math.floor(-portalRange-1.5)){
-                    nx = -portalRange-1.5;
+                if(x == Math.floor((-portalRange-0.5)/2)*2){
+                    nx = -portalRange-0.5;
                 }
-                if(x == Math.ceil(portalRange+1.5)){
-                    nx = portalRange+1.5;
+                if(x == Math.ceil((portalRange+0.5)/2)*2){
+                    nx = portalRange+0.5;
                 }
-                if(z == Math.floor(-portalRange-1.5)){
-                    nz = -portalRange-1.5;
+                if(z == Math.floor((-portalRange-0.5)/2)*2){
+                    nz = -portalRange-0.5;
                 }
-                if(z == Math.ceil(portalRange+1.5)){
-                    nz = portalRange+1.5;
+                if(z == Math.ceil((portalRange+0.5)/2)*2){
+                    nz = portalRange+0.5;
                 }
                 if(world.scoreboard.getObjective("portal_state").getScore(portal.scoreboardIdentity) >= 1 && loop%5 == 0){
                     portal.dimension.spawnParticle("minecraft:blue_flame_particle",{x:portal.location.x+nx,y:portal.location.y,z:portal.location.z+nz});
@@ -300,9 +318,9 @@ function touch_portal(portalEntity,player){
         if(world.scoreboard.getObjective("portal_state").getScore(portalEntity.scoreboardIdentity)==0){
             if(player.hasTag("blue")){
                 player.inputPermissions.setPermissionCategory(InputPermissionCategory.Camera,false);
-                //取得時の行動ロック(2s)
+                //取得時の行動ロック(2.5s)
                 if(!player.lockMovement>=1 && player.sneakingTime == 1){
-                    player.lockMovement = 40;
+                    player.lockMovement = 50;
                 }
                 //ポータル拡張ロック
                 portalEntity.lock = true;
@@ -314,9 +332,9 @@ function touch_portal(portalEntity,player){
             }
             if(player.hasTag("red")){
                 player.inputPermissions.setPermissionCategory(InputPermissionCategory.Camera,false);
-                //取得時の行動ロック(2s)
+                //取得時の行動ロック(2.5s)
                 if(!player.lockMovement>=1 && player.sneakingTime == 1){
-                    player.lockMovement = 40;
+                    player.lockMovement = 50;
                 }
                 //ポータル拡張ロック
                 portalEntity.lock = true;
@@ -332,17 +350,17 @@ function touch_portal(portalEntity,player){
         if(portalEntity.hasTag("steppedByBlue") && world.scoreboard.getObjective("portal_state").getScore(portalEntity.scoreboardIdentity)>=1)return false;
         if(portalEntity.hasTag("steppedByRed") && world.scoreboard.getObjective("portal_state").getScore(portalEntity.scoreboardIdentity)<=-1)return false;
         if(player.inputPermissions.isPermissionCategoryEnabled(InputPermissionCategory.Camera))player.inputPermissions.setPermissionCategory(InputPermissionCategory.Camera,false);
-        //タッチ時の行動ロック(1s)
+        //タッチ時の行動ロック(1.7s)
         if(!player.lockMovement>=1 && player.sneakingTime == 1){
-            player.lockMovement = 20;
+            player.lockMovement = 34;
         }
         if(player.sneakingTime>=21){
             if(player.hasTag("blue")){
-                world.scoreboard.getObjective("portal_state").addScore(portalEntity.scoreboardIdentity,2);
+                world.scoreboard.getObjective("portal_state").addScore(portalEntity.scoreboardIdentity,9);
                 if(world.scoreboard.getObjective("portal_state").getScore(portalEntity.scoreboardIdentity)>=0){
-                    //取得時の行動ロック(2s)
+                    //取得時の行動ロック(2.5s)
                     if(!player.lockMovement>=1){
-                        player.lockMovement = 40;
+                        player.lockMovement = 50;
                     }
                     //ポータル拡張ロック
                     portalEntity.lock = true;
@@ -354,11 +372,11 @@ function touch_portal(portalEntity,player){
                 }
             }
             if(player.hasTag("red")){
-                world.scoreboard.getObjective("portal_state").addScore(portalEntity.scoreboardIdentity,-2);
+                world.scoreboard.getObjective("portal_state").addScore(portalEntity.scoreboardIdentity,-9);
                 if(world.scoreboard.getObjective("portal_state").getScore(portalEntity.scoreboardIdentity)<=0){
-                    //取得時の行動ロック(2s)
+                    //取得時の行動ロック(2.5s)
                     if(!player.lockMovement>=1){
-                        player.lockMovement = 40;
+                        player.lockMovement = 50;
                     }
                     //ポータル拡張ロック
                     portalEntity.lock = true;
