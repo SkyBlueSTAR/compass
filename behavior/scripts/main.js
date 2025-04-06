@@ -454,9 +454,29 @@ function place_red_portal(portal){
 }
 
 system.afterEvents.scriptEventReceive.subscribe(ev=>{
-    if(ev.id == "cp:portal"){
-        ev.sourceEntity.addTag("portal_key");
-        portal_reset(ev.sourceEntity);
-        ev.sourceEntity.removeTag("portal_key")
+    if(ev.id == "cp:place_portal"){
+        const summonedArmorStand = ev.sourceEntity.dimension.spawnEntity("armor_stand",ev.sourceEntity.location);
+        summonedArmorStand.addTag("portal_key");
+        switch(ev.message){
+            case "A":
+                summonedArmorStand.addTag("portal_A");
+            break;
+            case "B":
+                summonedArmorStand.addTag("portal_A");
+            break;
+            case "C":
+                summonedArmorStand.addTag("portal_A");
+            break;
+            case "D":
+                summonedArmorStand.addTag("portal_A");
+            break;
+            case "E":
+                summonedArmorStand.addTag("portal_A");
+            break;
+            case "lounge":
+                summonedArmorStand.addTag("portal_A");
+            break;
+        }
+        portal_reset(summonedArmorStand);
     }
 })
