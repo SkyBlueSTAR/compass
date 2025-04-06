@@ -1,5 +1,6 @@
-import {world,system, GameMode, BlockType, BlockTypes, BlockComponentTypes, EasingType, BlockPermutation, BlockVolume, InputPermissionCategory} from "@minecraft/server";
+import {world,system, GameMode, EasingType, BlockPermutation, BlockVolume, InputPermissionCategory} from "@minecraft/server";
 import {ActionFormData} from "@minecraft/server-ui";
+import cards from "./cards";
 
 const map = {
     coordinates:[
@@ -104,6 +105,10 @@ world.afterEvents.worldInitialize.subscribe(()=>{
     if(!world.scoreboard.getObjective("time")?.isValid())world.scoreboard.addObjective("time");
     if(!world.scoreboard.getObjective("portal_state")?.isValid())world.scoreboard.addObjective("portal_state")
     if(!world.scoreboard.getObjective("time").hasParticipant("time"))world.scoreboard.getObjective("time").setScore("time",0);
+})
+
+world.afterEvents.itemUse.subscribe(ev=>{
+    cards.find(v=>{return v.itemId == ev.itemStack.typeId})?.ef(ev.source);
 })
 
 let loop = 0;
