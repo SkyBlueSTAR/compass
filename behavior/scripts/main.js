@@ -143,6 +143,9 @@ system.runInterval(()=>{
             if(!portal_touch){
                 //HA処理
                 player.isInAction = true;
+                if(player.sneakingTime==11){
+                    
+                }
             }
         }
         switch(player.dimension.getBlock(player.location).below().permutation.type.id){
@@ -462,19 +465,19 @@ system.afterEvents.scriptEventReceive.subscribe(ev=>{
                 summonedArmorStand.addTag("portal_A");
             break;
             case "B":
-                summonedArmorStand.addTag("portal_A");
+                summonedArmorStand.addTag("portal_B");
             break;
             case "C":
-                summonedArmorStand.addTag("portal_A");
+                summonedArmorStand.addTag("portal_C");
             break;
             case "D":
-                summonedArmorStand.addTag("portal_A");
+                summonedArmorStand.addTag("portal_D");
             break;
             case "E":
-                summonedArmorStand.addTag("portal_A");
+                summonedArmorStand.addTag("portal_E");
             break;
             case "lounge":
-                summonedArmorStand.addTag("portal_A");
+                summonedArmorStand.addTag("portal_lounge");
             break;
         }
         portal_reset(summonedArmorStand);
